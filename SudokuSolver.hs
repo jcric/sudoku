@@ -87,7 +87,7 @@ valid b = allMy nodups (rows b) &&
 -- Solves for all solutions
 -- A composition of three functions
 solve :: Board -> [Board]
-solve b = filter valid(explode(prune(choices b)))
+solve b = filter valid(explode(fix prune(choices b)))
 
 -- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
 type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
@@ -134,4 +134,9 @@ prune :: Matrix Choices -> Matrix Choices
 prune m = pruneBy boxs (pruneBy cols (pruneBy rows m))
   where
     pruneBy f = map (reduce . f)
+
+fix :: Eq a => (a -> a) -> a -> a
+fix f x = if x == x' then x else fix f x'
+  where
+    x' = f x
 
