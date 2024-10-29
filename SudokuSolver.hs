@@ -42,7 +42,7 @@ EXAMPLES:
 --numSolutions = undefined -- remove `= undefined' and define your function here
 
 
--- Define transpose if it's not imported
+
 transpose :: [[a]] -> [[a]]
 transpose ([]:_) = []
 transpose x = map head x : transpose (map tail x)
@@ -56,15 +56,32 @@ rows = id
 cols :: Board -> Board
 cols = transpose
 
--- Group a list into sublists of given size
+-- Groups a list into sublists of given size
 group :: Int -> [a] -> [[a]]
 group _ [] = []
 group n xs = take n xs : group n (drop n xs)
 
--- Ungroup a list of lists into a single list
+-- Ungroups a list of lists into a single list
 ungroup :: [[a]] -> [a]
 ungroup = concat
 
--- Rearrange board into square sub-blocks of a specified size
-boxs :: Int -> Board -> Board
-boxs n = map concat . concatMap transpose . map (map (group n)) . group n
+-- Rearranges board into square sub-blocks of a specified size
+--boxs :: Int -> Board -> Board
+--boxs n = map concat . concatMap transpose . map (map (group n)) . group n
+boxs :: Board -> Board
+boxs = map concat . concatMap transpose . map (map (group 3)) . group 3
+
+
+allMy :: (a -> Bool) -> [a] -> Bool
+allMy p xs = and [p x | x <- xs]
+
+nodups :: Eq a => [a] -> Bool
+nodups [] = True
+nodups (x:xs) = not (elem x xs) && nodups xs
+
+-- Valid if no duplicates in any row, columns or any box
+valid :: Board -> Bool
+valid b = allMy nodups (rows b) &&
+          allMy nodups (cols b) &&
+          allMy nodups (boxs b) --add n-box later
+
