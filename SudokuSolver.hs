@@ -71,7 +71,6 @@ ungroup = concat
 boxs :: Board -> Board
 boxs = map concat . concatMap transpose . map (map (group 3)) . group 3
 
-
 allMy :: (a -> Bool) -> [a] -> Bool
 allMy p xs = and [p x | x <- xs]
 
@@ -84,4 +83,55 @@ valid :: Board -> Bool
 valid b = allMy nodups (rows b) &&
           allMy nodups (cols b) &&
           allMy nodups (boxs b) --add n-box later
+
+-- Solves for all solutions
+-- A composition of three functions
+solve :: Board -> [Board]
+solve b = filter valid(explode(prune(choices b)))
+
+-- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
+type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
+type Choices = [Int]         -- Define Choices as a synonym for [Char]
+
+-- Example function to determine if a cell is blank
+blank :: Int -> Bool
+blank e = e == 0  -- Assuming blank is represented by 0
+
+-- Example function to return possible values for a blank cell
+cellvals :: Choices
+cellvals =  [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+-- Choose function to replace blank entries with possible choices
+choose :: Int -> Choices
+choose e = if blank e then cellvals else [e]  -- Convert Int to Char
+
+-- Choices function that replaces blank entries with all possible choices
+choices :: Board -> Matrix Choices
+choices = map (map choose)
+
+-- "The function cp computes the cartesian product of a list of lists" from Richard Bird
+cp :: [[a]] -> [[a]]
+cp [] = [[]]
+cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
+
+-- MCP (Matrix Cartesian Product)
+explode :: Matrix [a] -> [Matrix a]
+explode m = cp (map cp m)
+
+remove :: Choices -> Choices -> Choices
+remove fs cs = filter (`notElem` fs) cs
+
+single :: Choices -> Bool
+single cs = length cs == 1
+
+fixed :: [Choices] -> Choices
+fixed = concat . filter single
+
+reduce :: [Choices] -> [Choices]
+reduce css = map (remove (fixed css)) css
+
+prune :: Matrix Choices -> Matrix Choices
+prune m = pruneBy boxs (pruneBy cols (pruneBy rows m))
+  where
+    pruneBy f = map (reduce . f)
 
