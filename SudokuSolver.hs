@@ -1,4 +1,3 @@
-
 -- \/\/\/ DO NOT MODIFY THE FOLLOWING LINES \/\/\/
 module SudokuSolver(Board, Solutions(..), author, nickname, numSolutions) where
 import Sudoku(Board, Solutions(..))
@@ -43,5 +42,29 @@ EXAMPLES:
 --numSolutions = undefined -- remove `= undefined' and define your function here
 
 
+-- Define transpose if it's not imported
+transpose :: [[a]] -> [[a]]
+transpose ([]:_) = []
+transpose x = map head x : transpose (map tail x)
+
 numSolutions :: Board -> IO()
 numSolutions b = print b
+
+rows :: Board -> Board
+rows = id
+
+cols :: Board -> Board
+cols = transpose
+
+-- Group a list into sublists of given size
+group :: Int -> [a] -> [[a]]
+group _ [] = []
+group n xs = take n xs : group n (drop n xs)
+
+-- Ungroup a list of lists into a single list
+ungroup :: [[a]] -> [a]
+ungroup = concat
+
+-- Rearrange board into square sub-blocks of a specified size
+boxs :: Int -> Board -> Board
+boxs n = map concat . concatMap transpose . map (map (group n)) . group n
