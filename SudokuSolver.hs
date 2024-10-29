@@ -7,9 +7,9 @@ import Sudoku(Board, Solutions(..))
 your implementation.)
 -}
 author :: String
-author = undefined -- replace `undefined' with your first and last name
+author = "Jonas Richter"
 nickname :: String
-nickname = undefined -- replace `undefined' with a nickname for your solver
+nickname = "jcric"
 {- (Remember to provide a complete function specification.)
 -}
 numSolutions :: Board -> Solutions
