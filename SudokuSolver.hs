@@ -107,11 +107,12 @@ valid b = (noDupsInAll(rows b)) &&  (noDupsInAll(cols b)) && (noDupsInAll(boxs b
 -- Solves for all solutions
 -- A composition of three functions
 solve :: Board -> [Board]
-solve b = filter valid(explode(fix prune(choices b)))
+solve b = filter valid(explode(prune(choices b)))
 
 -- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
 type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
 type Choices = [Int]         -- Define Choices as a synonym for [Char]
+
 
 -- Example function to determine if a cell is blank
 blank :: Int -> Bool
@@ -129,14 +130,17 @@ choose e = if blank e then cellvals else [e]
 choices :: Board -> Matrix Choices
 choices = map (map choose)
 
--- "The function cp computes the cartesian product of a list of lists" from Richard Bird
+type MatrixChoices = [[Choices]] -- A 2D grid where each cell can have multiple values
+
+-- Cartesian product for a list of lists
 cp :: [[a]] -> [[a]]
 cp [] = [[]]
 cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
 
--- MCP (Matrix Cartesian Product)
-explode :: Matrix [a] -> [Matrix a]
+-- Explode a MatrixChoices into a list of all possible Boards
+explode :: MatrixChoices -> [Board]
 explode m = cp (map cp m)
+
 
 remove :: Choices -> Choices -> Choices
 remove fs cs = filter (`notElem` fs) cs
@@ -154,9 +158,9 @@ prune :: Matrix Choices -> Matrix Choices
 prune m = pruneBy boxs (pruneBy cols (pruneBy rows m))
   where
     pruneBy f = map (reduce . f)
-
+{-
 fix :: Eq a => (a -> a) -> a -> a
 fix f x = if x == x' then x else fix f x'
   where
     x' = f x
-
+-}
