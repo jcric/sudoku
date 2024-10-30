@@ -69,20 +69,36 @@ ungroup = concat
 --boxs :: Int -> Board -> Board
 --boxs n = map concat . concatMap transpose . map (map (group n)) . group n
 boxs :: Board -> Board
-boxs = map concat . concatMap transpose . map (map (group 3)) . group 3
+boxs = map concat . concatMap transpose . map (map (group 2)) . group 2
+
+
+
 
 allMy :: (a -> Bool) -> [a] -> Bool
-allMy p xs = and [p x | x <- xs]
+allMy _ [] = True                     -- If the list is empty, return True
+allMy p (x:xs) = p x && allMy p xs
+--allMy p xs = and [p x | x <- xs]
+--allMy p xs = all p xs
 
 nodups :: Eq a => [a] -> Bool
 nodups [] = True
 nodups (x:xs) = not (elem x xs) && nodups xs
 
+
 -- Valid if no duplicates in any row, columns or any box
-valid :: Board -> Bool
-valid b = allMy nodups (rows b) &&
-          allMy nodups (cols b) &&
-          allMy nodups (boxs b) --add n-box later
+valid :: Board -> Bool  --add n-box later
+valid b = (nodups(rows b)) &&  (nodups(cols b)) && (nodups(boxs b))
+
+
+
+
+
+
+
+
+
+
+
 
 -- Solves for all solutions
 -- A composition of three functions
@@ -99,11 +115,11 @@ blank e = e == 0  -- Assuming blank is represented by 0
 
 -- Example function to return possible values for a blank cell
 cellvals :: Choices
-cellvals =  [1, 2, 3, 4, 5, 6, 7, 8, 9]
+cellvals =  [1,2,3,4]
 
 -- Choose function to replace blank entries with possible choices
 choose :: Int -> Choices
-choose e = if blank e then cellvals else [e]  -- Convert Int to Char
+choose e = if blank e then cellvals else [e]
 
 -- Choices function that replaces blank entries with all possible choices
 choices :: Board -> Matrix Choices
