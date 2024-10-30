@@ -71,20 +71,6 @@ ungroup = concat
 boxs :: Board -> Board
 boxs = map concat . concatMap transpose . map (map (group 2)) . group 2
 
-
-
-{-
-allMy :: (a -> Bool) -> [a] -> Bool
-allMy _ [] = True                     -- If the list is empty, return True
-allMy p (x:xs) = p x && allMy p xs
---allMy p xs = and [p x | x <- xs]
---allMy p xs = all p xs
-
-nodups :: Eq a => [a] -> Bool
-nodups [] = True
-nodups (x:xs) = not (elem x xs) && nodups xs
--}
-
 -- Define a function to check for duplicates in a single list, ignoring zeros
 noDups :: (Eq a, Num a) => [a] -> Bool
 noDups xs = let filtered = filter (/= 0) xs  -- Remove zeros from the list
@@ -107,7 +93,8 @@ valid b = (noDupsInAll(rows b)) &&  (noDupsInAll(cols b)) && (noDupsInAll(boxs b
 -- Solves for all solutions
 -- A composition of three functions
 solve :: Board -> [Board]
-solve b = filter valid(explode(prune(choices b)))
+--solve b = filter valid(explode(prune(choices b)))
+solve b = filter valid(explode(choices b))
 
 -- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
 type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
@@ -141,26 +128,19 @@ cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
 explode :: MatrixChoices -> [Board]
 explode m = cp (map cp m)
 
-
-remove :: Choices -> Choices -> Choices
-remove fs cs = filter (`notElem` fs) cs
-
-single :: Choices -> Bool
-single cs = length cs == 1
-
-fixed :: [Choices] -> Choices
-fixed = concat . filter single
-
-reduce :: [Choices] -> [Choices]
-reduce css = map (remove (fixed css)) css
+reduce :: Eq a => [[a]] -> [[a]]
+reduce xs =
+  let singleElements = [head l | l <- xs, length l == 1]  -- Get elements from single-element lists
+      uniqueSingleElements = unique singleElements        -- Remove duplicates
+  in map (\l -> if length l == 1 then l else filter (`notElem` uniqueSingleElements) l) xs
 
 prune :: Matrix Choices -> Matrix Choices
 prune m = pruneBy boxs (pruneBy cols (pruneBy rows m))
   where
     pruneBy f = map (reduce . f)
-{-
+
 fix :: Eq a => (a -> a) -> a -> a
 fix f x = if x == x' then x else fix f x'
   where
     x' = f x
--}
+
