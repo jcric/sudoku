@@ -73,7 +73,7 @@ boxs = map concat . concatMap transpose . map (map (group 2)) . group 2
 
 
 
-
+{-
 allMy :: (a -> Bool) -> [a] -> Bool
 allMy _ [] = True                     -- If the list is empty, return True
 allMy p (x:xs) = p x && allMy p xs
@@ -83,21 +83,26 @@ allMy p (x:xs) = p x && allMy p xs
 nodups :: Eq a => [a] -> Bool
 nodups [] = True
 nodups (x:xs) = not (elem x xs) && nodups xs
+-}
 
+-- Define a function to check for duplicates in a single list, ignoring zeros
+noDups :: (Eq a, Num a) => [a] -> Bool
+noDups xs = let filtered = filter (/= 0) xs  -- Remove zeros from the list
+            in length filtered == length (unique filtered)
 
+-- Helper function to get unique elements in a list
+unique :: Eq a => [a] -> [a]
+unique []     = []
+unique (x:xs) = x : unique (filter (/= x) xs)
+
+-- Check each list in a list of lists
+noDupsInAll :: (Eq a, Num a) => [[a]] -> Bool
+noDupsInAll = all noDups
+
+{-
 -- Valid if no duplicates in any row, columns or any box
 valid :: Board -> Bool  --add n-box later
 valid b = (nodups(rows b)) &&  (nodups(cols b)) && (nodups(boxs b))
-
-
-
-
-
-
-
-
-
-
 
 
 -- Solves for all solutions
@@ -156,3 +161,4 @@ fix f x = if x == x' then x else fix f x'
   where
     x' = f x
 
+-}
