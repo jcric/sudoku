@@ -99,10 +99,9 @@ unique (x:xs) = x : unique (filter (/= x) xs)
 noDupsInAll :: (Eq a, Num a) => [[a]] -> Bool
 noDupsInAll = all noDups
 
-{-
 -- Valid if no duplicates in any row, columns or any box
 valid :: Board -> Bool  --add n-box later
-valid b = (nodups(rows b)) &&  (nodups(cols b)) && (nodups(boxs b))
+valid b = (noDupsInAll(rows b)) &&  (noDupsInAll(cols b)) && (noDupsInAll(boxs b))
 
 
 -- Solves for all solutions
@@ -161,4 +160,3 @@ fix f x = if x == x' then x else fix f x'
   where
     x' = f x
 
--}
