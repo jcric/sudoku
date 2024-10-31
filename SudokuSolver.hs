@@ -93,8 +93,7 @@ valid b = (noDupsInAll(rows b)) &&  (noDupsInAll(cols b)) && (noDupsInAll(boxs b
 -- Solves for all solutions
 -- A composition of three functions
 solve :: Board -> [Board]
---solve b = filter valid(explode(prune(choices b)))
-solve b = filter valid(explode(choices b))
+solve b = filter valid(explode(prune(choices b)))
 
 -- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
 type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
@@ -128,19 +127,42 @@ cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
 explode :: MatrixChoices -> [Board]
 explode m = cp (map cp m)
 
+
 reduce :: Eq a => [[a]] -> [[a]]
 reduce xs =
   let singleElements = [head l | l <- xs, length l == 1]  -- Get elements from single-element lists
       uniqueSingleElements = unique singleElements        -- Remove duplicates
   in map (\l -> if length l == 1 then l else filter (`notElem` uniqueSingleElements) l) xs
-
-prune :: Matrix Choices -> Matrix Choices
-prune m = pruneBy boxs (pruneBy cols (pruneBy rows m))
+{-
+--prune :: [Matrix Choices] -> [Matrix Choices]
+prune :: [[[Int]]] -> [[[Int]]]
+prune m = pruneBy boxs3D (pruneBy cols3D (pruneBy rows3D [m]))
   where
     pruneBy f = map (reduce . f)
+-}
 
 fix :: Eq a => (a -> a) -> a -> a
 fix f x = if x == x' then x else fix f x'
   where
     x' = f x
 
+cols3D :: [Board] -> [Board]
+cols3D = transpose
+
+rows3D :: [Board] -> [Board]
+rows3D = id
+
+boxs3D :: [Board] -> [Board]
+boxs3D = map concat . concatMap transpose . map (map (group 2)) . group 2
+
+applyReduceToRows :: [Board] -> [Board]
+applyReduceToRows = map reduce
+
+applyReduceToCols :: [Board] -> [Board]
+applyReduceToCols b = cols3D(map reduce(cols3D(b)))
+
+applyReduceToBoxs :: [Board] -> [Board]
+applyReduceToBoxs b = boxs3D(map reduce(boxs3D(b)))
+
+prune :: [Board] -> [Board]
+prune b = applyReduceToRows(applyReduceToCols(applyReduceToBoxs(b)))
