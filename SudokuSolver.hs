@@ -26,31 +26,62 @@ Richard Bird´s paper:
 https://www.cs.tufts.edu/~nr/cs257/archive/richard-bird/sudoku.pdf
 
 EXPLANATION OF SOLUTION:
+The function solve takes in a board with empty cells and returns a list of board(s) as a solution. If no solutions exist, the empty
+list is returned. In solve, we run a number of functions. I will start by briefly explaining the inner-most function one and work myself ourwards.
+
+Step 1:
+Choices:
+Each cell with 0 as a value is replaced by a list of all integer values from 1 to n, with n being the length of the board.
+
+Step 2
+Prune:
+Removes reduntant values from the list of choices we created above by checking for duplicates in either row, column or bow.
+For instance, if we have put [1,2,3,4] into a 0-cell as choices in a 4x4 board, and 1 and 2 already exist in the given row,
+these values will be removed from the choices list, yielding [3,4] as choices for the previously 0 cell.
+
+Step 3:
+Explode:
+Creates every combination of board using the valid choices (Matrix Cartesian Product) and returns a list of boards.
+For instace [[[1,2],[3]],[[4],[5]] -> [[[1,3],[4,5]],[[2,3],[[4],[5]]]
+
+Step 4:
+Valid:
+Checks if a board is free from duplicates in rows, columns and boxes. This function is filtered over the list of possible solution boards
+
 
 -}
+
 
 author :: String
 author = "Jonas Richter"
 nickname :: String
 nickname = "jcric"
 
-
 {-
 numSolutions
-
 Takes a Board and returns the number of ways that it can be completed into a solved Sudoku: 0, 1, or several.
-
 RETURNS:
+- NoSolution if there are no valid solutions.
+- UniqueSolution if there is exactly one valid solution.
+- MultipleSolutions if there are multiple valid solutions.
 PARAMETERS:
+- A Board representing the current state of a Sudoku puzzle.
 SIDE EFFECTS: None. Also, no input or output operations from e.g. the console, file system or network are performed.
 EXAMPLES:
-
-
+- numSolutions [[1, 1, 3, 4], [3, 4, 1, 2], [2, 1, 4, 3], [4, 3, 2, 1]] => NoSolution (board invalid)
+- numSolutions [[1, 0, 3, 4], [3, 4, 1, 2], [2, 1, 4, 3], [4, 3, 2, 1]] => UniqueSolution
+- numSolutions [[1, 2, 0, 0], [0, 0, 2, 1], [0, 1, 0, 2], [2, 0, 1, 0]]  => MultipleSolutions
 -}
-
+numSolutions :: Board -> Solutions
+numSolutions board =
+    let solutions = solve board
+    in case length solutions of
+        0 -> NoSolution
+        1 -> UniqueSolution
+        _ -> MultipleSolutions
+--}
 --numSolutions :: Board -> Solutions
---numSolutions = undefined -- remove `= undefined' and define your function here
-
+--numSolutions board = undefined
 
 {- transpose xs
    Transposes a 2D list by swapping rows and columns.
