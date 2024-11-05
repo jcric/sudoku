@@ -1,13 +1,23 @@
 -- \/\/\/ DO NOT MODIFY THE FOLLOWING LINES \/\/\/
 module SudokuSolver(Board, Solutions(..), author, nickname, numSolutions) where
 import Sudoku(Board, Solutions(..))
+import Data.Maybe (fromMaybe)
+
 -- /\/\/\ DO NOT MODIFY THE PRECEDING LINES /\/\/\
 
 {-
 SOURCES:
 For my solution, I have decided to implement a solver based on the one presented by Graham Hutton on his Youtube channel of the same
 name under his course Advanced Functional Programming. He in turn has based his solver on Professor Richard Bird´s solution, which
-was originally implemented in Pearl. Both sources are linked below:
+was originally implemented in Pearl.
+
+To name a few of the differences between our versions - firstly, Graham´s board representation is as a list of strings, unlike mine 
+which is a list of list of integers. Moreover, once he has created a list of choices, he is reducing values iteratively until a fix
+point is reached. My reduce function does this automatically.
+
+
+
+Both sources are linked below:
 
 Graham Hutton´s Youtube channel:
 https://www.youtube.com/@haskellhutt
@@ -69,7 +79,10 @@ ungroup = concat
 --boxs :: Int -> Board -> Board
 --boxs n = map concat . concatMap transpose . map (map (group n)) . group n
 boxs :: Board -> Board
-boxs = map concat . concatMap transpose . map (map (group 2)) . group 2
+boxs board =
+    let n = length board           -- Get the number of rows (assuming a square board)
+        blockSize = floor . sqrt $ fromIntegral n  -- Calculate the block size
+    in map concat . concatMap transpose . map (map (group blockSize)) . group blockSize $ board--boxs = map concat . concatMap transpose . map (map (group 3)) . group 3
 
 -- Define a function to check for duplicates in a single list, ignoring zeros
 noDups :: (Eq a, Num a) => [a] -> Bool
@@ -94,7 +107,7 @@ valid b = (noDupsInAll(rows b)) &&  (noDupsInAll(cols b)) && (noDupsInAll(boxs b
 -- A composition of three functions
 solve :: Board -> [Board]
 solve b = filter valid(explode(prune(choices b)))
-
+--solve b = explode(prune(choices b))
 -- Takes each blank cell in sudoku board (0 elements) and replaces it by all possible choices
 type Matrix a = [[a]]         -- Define Matrix as a list of lists of a generic type
 type Choices = [Int]         -- Define Choices as a synonym for [Char]
@@ -105,17 +118,17 @@ blank :: Int -> Bool
 blank e = e == 0  -- Assuming blank is represented by 0
 
 -- Example function to return possible values for a blank cell
-cellvals :: Choices
-cellvals =  [1,2,3,4]
+cellvals :: Board -> Choices
+cellvals board = [1 .. n]
+  where n = length board
 
 -- Choose function to replace blank entries with possible choices
-choose :: Int -> Choices
-choose e = if blank e then cellvals else [e]
+choose :: Board -> Int -> Choices
+choose board e = if blank e then cellvals board else [e]
 
 -- Choices function that replaces blank entries with all possible choices
 choices :: Board -> Matrix Choices
-choices = map (map choose)
-
+choices board = map (map (choose board)) board
 type MatrixChoices = [[Choices]] -- A 2D grid where each cell can have multiple values
 
 -- Cartesian product for a list of lists
@@ -127,24 +140,11 @@ cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
 explode :: MatrixChoices -> [Board]
 explode m = cp (map cp m)
 
-
 reduce :: Eq a => [[a]] -> [[a]]
 reduce xs =
   let singleElements = [head l | l <- xs, length l == 1]  -- Get elements from single-element lists
       uniqueSingleElements = unique singleElements        -- Remove duplicates
   in map (\l -> if length l == 1 then l else filter (`notElem` uniqueSingleElements) l) xs
-{-
---prune :: [Matrix Choices] -> [Matrix Choices]
-prune :: [[[Int]]] -> [[[Int]]]
-prune m = pruneBy boxs3D (pruneBy cols3D (pruneBy rows3D [m]))
-  where
-    pruneBy f = map (reduce . f)
--}
-
-fix :: Eq a => (a -> a) -> a -> a
-fix f x = if x == x' then x else fix f x'
-  where
-    x' = f x
 
 cols3D :: [Board] -> [Board]
 cols3D = transpose
@@ -163,6 +163,6 @@ applyReduceToCols b = cols3D(map reduce(cols3D(b)))
 
 applyReduceToBoxs :: [Board] -> [Board]
 applyReduceToBoxs b = boxs3D(map reduce(boxs3D(b)))
-
+--applyReduceToBoxs b = (map (map reduce) (boxs3D b))(boxs3D)
 prune :: [Board] -> [Board]
-prune b = applyReduceToRows(applyReduceToCols(applyReduceToBoxs(b)))
+prune b = applyReduceToBoxs(applyReduceToCols(applyReduceToRows(b)))
