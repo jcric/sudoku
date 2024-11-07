@@ -300,7 +300,11 @@ rows3D = id
    EXAMPLES: boxs3D [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] = [[[1, 2, 5, 6], [3, 4, 7, 8]]]
 -}
 boxs3D :: [Board] -> [Board]
-boxs3D = map concat . concatMap transpose . map (map (group 2)) . group 2
+boxs3D board =
+    let n = length board
+        blockSize = floor . sqrt $ fromIntegral n
+    in map concat . concatMap transpose . map (map (group blockSize)) . group blockSize $ board
+
 
 {- applyReduceToRows boards
    Applies the reduce function to each row of the given boards.
@@ -328,7 +332,7 @@ applyReduceToBoxs :: [Board] -> [Board]
 applyReduceToBoxs b = boxs3D(map reduce(boxs3D(b)))
 
 {- prune b
-   Repeatedly applies reduction across rows, columns, and boxes.
+   Applies reduction across rows, columns, and boxes.
    PARAMETERS: b - A 2D matrix where each cell contains a list of possible values.
    RETURNS: A 2D matrix of choices with unnecessary values pruned.
    EXAMPLES:
